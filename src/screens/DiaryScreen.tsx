@@ -25,10 +25,16 @@ export default function DiaryScreen({
     acne: 0,
   });
 
+  // Photo states
+  const [photoFront, setPhotoFront] = useState<string | null>(null);
+  const [photoLeft, setPhotoLeft] = useState<string | null>(null);
+  const [photoRight, setPhotoRight] = useState<string | null>(null);
+
   const handleSave = () => {
     const newEntry = {
       date: new Date().toISOString(),
       prom: { ...prom },
+      photos: { front: photoFront, left: photoLeft, right: photoRight }
     };
     setUserData({ 
       ...userData, 
@@ -37,6 +43,20 @@ export default function DiaryScreen({
     });
     setActiveTab("history");
     setProm({ dryness: 0, stinging: 0, redness: 0, acne: 0 }); // reset
+    setPhotoFront(null);
+    setPhotoLeft(null);
+    setPhotoRight(null);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, setter: (val: string) => void) => {
+    const file = e.target.files?.[0];
+    if (file) {
+       const reader = new FileReader();
+       reader.onloadend = () => {
+         setter(reader.result as string);
+       };
+       reader.readAsDataURL(file);
+    }
   };
 
   const hasHighIrritation = prom.stinging >= 6 || prom.redness >= 6;
@@ -75,18 +95,33 @@ export default function DiaryScreen({
               <Camera size={18} className="text-primary-400" /> Hình ảnh hôm nay
             </h3>
             <div className="grid grid-cols-3 gap-2">
-              <div className="aspect-[3/4] bg-primary-50 rounded-2xl border-2 border-dashed border-primary-200 flex flex-col items-center justify-center text-primary-400 cursor-pointer hover:bg-primary-100">
-                <Camera size={24} />
-                <span className="text-[10px] font-bold mt-1">Trực diện</span>
-              </div>
-              <div className="aspect-[3/4] bg-primary-50 rounded-2xl border-2 border-dashed border-primary-200 flex flex-col items-center justify-center text-primary-400 cursor-pointer hover:bg-primary-100">
-                <Camera size={24} />
-                <span className="text-[10px] font-bold mt-1">Trái</span>
-              </div>
-              <div className="aspect-[3/4] bg-primary-50 rounded-2xl border-2 border-dashed border-primary-200 flex flex-col items-center justify-center text-primary-400 cursor-pointer hover:bg-primary-100">
-                <Camera size={24} />
-                <span className="text-[10px] font-bold mt-1">Phải</span>
-              </div>
+              <label className="aspect-[3/4] bg-primary-50 rounded-2xl border-2 border-dashed border-primary-200 flex flex-col items-center justify-center text-primary-400 cursor-pointer overflow-hidden relative group">
+                <input type="file" accept="image/*" className="hidden" onChange={e => handleFileChange(e, setPhotoFront)} />
+                {photoFront ? <img src={photoFront} alt="Front" className="absolute inset-0 w-full h-full object-cover" /> : (
+                  <>
+                    <Camera size={24} className="group-hover:scale-110 transition-transform" />
+                    <span className="text-[10px] font-bold mt-1">Trực diện</span>
+                  </>
+                )}
+              </label>
+              <label className="aspect-[3/4] bg-primary-50 rounded-2xl border-2 border-dashed border-primary-200 flex flex-col items-center justify-center text-primary-400 cursor-pointer overflow-hidden relative group">
+                <input type="file" accept="image/*" className="hidden" onChange={e => handleFileChange(e, setPhotoLeft)} />
+                {photoLeft ? <img src={photoLeft} alt="Left" className="absolute inset-0 w-full h-full object-cover" /> : (
+                  <>
+                    <Camera size={24} className="group-hover:scale-110 transition-transform" />
+                    <span className="text-[10px] font-bold mt-1">Trái</span>
+                  </>
+                )}
+              </label>
+              <label className="aspect-[3/4] bg-primary-50 rounded-2xl border-2 border-dashed border-primary-200 flex flex-col items-center justify-center text-primary-400 cursor-pointer overflow-hidden relative group">
+                <input type="file" accept="image/*" className="hidden" onChange={e => handleFileChange(e, setPhotoRight)} />
+                {photoRight ? <img src={photoRight} alt="Right" className="absolute inset-0 w-full h-full object-cover" /> : (
+                  <>
+                    <Camera size={24} className="group-hover:scale-110 transition-transform" />
+                    <span className="text-[10px] font-bold mt-1">Phải</span>
+                  </>
+                )}
+              </label>
             </div>
             <div className="bg-blue-50 text-blue-700 p-3 rounded-xl flex gap-2 items-start mt-2 border border-blue-100">
                <ShieldCheck size={16} className="mt-0.5 shrink-0" />
@@ -161,8 +196,12 @@ export default function DiaryScreen({
                 key={i}
                 className="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4"
               >
-                <div className="w-16 h-16 bg-primary-50 rounded-2xl flex items-center justify-center text-primary-300">
-                  <Camera />
+                <div className="w-16 h-16 bg-primary-50 rounded-2xl flex items-center justify-center text-primary-300 overflow-hidden shrink-0">
+                  {p.photos?.front || p.photos?.left || p.photos?.right ? (
+                    <img src={p.photos.front || p.photos.left || p.photos.right} alt="Log" className="w-full h-full object-cover" />
+                  ) : (
+                    <Camera />
+                  )}
                 </div>
                 <div className="flex-1">
                   <div className="font-bold text-gray-800 text-sm">
