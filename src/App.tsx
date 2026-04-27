@@ -16,8 +16,24 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<
     "home" | "quiz" | "auditor" | "diary" | "profile" | "reference"
   >("home");
-  const [userData, setUserData] = useState<UserData>(defaultUserData);
+  const [userData, setUserData] = useState<UserData>(() => {
+    const saved = localStorage.getItem("skinmate_userdata");
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error("Failed to parse user data", e);
+      }
+    }
+    return defaultUserData;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("skinmate_userdata", JSON.stringify(userData));
+  }, [userData]);
+
   const [nameInput, setNameInput] = useState("");
+
 
   const tabs = [
     { id: "home", label: "Home", icon: Home },
