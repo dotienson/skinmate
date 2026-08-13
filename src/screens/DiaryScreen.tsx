@@ -62,10 +62,15 @@ export default function DiaryScreen({
     acne: 0,
   });
 
-  // Photo states
+  // Photo states for storage (Thumbnails)
   const [photoFront, setPhotoFront] = useState<string | null>(null);
   const [photoLeft, setPhotoLeft] = useState<string | null>(null);
   const [photoRight, setPhotoRight] = useState<string | null>(null);
+
+  // Original photo URLs for immediate download
+  const [photoFrontOrig, setPhotoFrontOrig] = useState<string | null>(null);
+  const [photoLeftOrig, setPhotoLeftOrig] = useState<string | null>(null);
+  const [photoRightOrig, setPhotoRightOrig] = useState<string | null>(null);
 
   const [selectedLog, setSelectedLog] = useState<any | null>(null);
 
@@ -92,12 +97,13 @@ export default function DiaryScreen({
   };
 
   const handleSave = () => {
-    // Tự động tải ảnh về máy khi lưu log (có delay ngắn để trình duyệt không chặn popup)
+    // Tự động tải ảnh về máy khi lưu log (tải bản chất lượng gốc)
     const dateStr = new Date().toLocaleDateString('vi-VN').replace(/\//g, '-');
-    if (photoFront) setTimeout(() => downloadImage(photoFront, 'TrucDien', dateStr), 100);
-    if (photoLeft) setTimeout(() => downloadImage(photoLeft, 'Trai', dateStr), 400);
-    if (photoRight) setTimeout(() => downloadImage(photoRight, 'Phai', dateStr), 700);
+    if (photoFrontOrig) setTimeout(() => downloadImage(photoFrontOrig, 'TrucDien', dateStr), 100);
+    if (photoLeftOrig) setTimeout(() => downloadImage(photoLeftOrig, 'Trai', dateStr), 400);
+    if (photoRightOrig) setTimeout(() => downloadImage(photoRightOrig, 'Phai', dateStr), 700);
 
+    // Lưu ảnh thumbnail vào lịch sử ứng dụng để không tràn bộ nhớ
     const newEntry = {
       date: new Date().toISOString(),
       prom: { ...prom },
@@ -113,18 +119,25 @@ export default function DiaryScreen({
     setPhotoFront(null);
     setPhotoLeft(null);
     setPhotoRight(null);
+    setPhotoFrontOrig(null);
+    setPhotoLeftOrig(null);
+    setPhotoRightOrig(null);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, setter: (val: string) => void) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, setThumb: (val: string) => void, setOrig: (val: string) => void) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Giữ nguyên file gốc để tải về
+      setOrig(URL.createObjectURL(file));
+
       const reader = new FileReader();
       reader.onloadend = () => {
         const img = new Image();
         img.onload = () => {
           const canvas = document.createElement("canvas");
-          const MAX_WIDTH = 2048;
-          const MAX_HEIGHT = 2048;
+          // Nén mạnh thành Thumbnail để lưu vào localStorage không bị crash
+          const MAX_WIDTH = 512;
+          const MAX_HEIGHT = 512;
           let width = img.width;
           let height = img.height;
 
@@ -144,9 +157,8 @@ export default function DiaryScreen({
           const ctx = canvas.getContext("2d");
           ctx?.drawImage(img, 0, 0, width, height);
           
-          // Use high quality JPEG (0.95) for original resolution look while preventing localStorage quota overflow
-          const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
-          setter(dataUrl);
+          const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
+          setThumb(dataUrl);
         };
         img.src = reader.result as string;
       };
@@ -191,8 +203,8 @@ export default function DiaryScreen({
             </h3>
             <div className="grid grid-cols-3 gap-2">
               <label onClick={(e) => handleCameraClick(e, "photo-front")} className="aspect-[3/4] bg-primary-50 rounded-2xl border-2 border-dashed border-primary-200 flex flex-col items-center justify-center text-primary-400 cursor-pointer overflow-hidden relative group">
-                <input id="photo-front" type="file" accept="image/*" className="hidden" onChange={e => handleFileChange(e, setPhotoFront)} />
-                {photoFront ? <img src={photoFront} alt="Front" className="absolute inset-0 w-full h-full object-cover" /> : (
+                <input id="photo-front" type="file" accept="image/*" className="hidden" onChange={e => handleFileChange(e, setPhotoFront, setPhotoFrontOrig)} />
+                {photoFrontOrig ? <img src={photoFrontOrig} alt="Front" className="absolute inset-0 w-full h-full object-cover" /> : (
                   <>
                     <Camera size={24} className="group-hover:scale-110 transition-transform" />
                     <span className="text-[10px] font-bold mt-1">Trực diện</span>
@@ -200,8 +212,8 @@ export default function DiaryScreen({
                 )}
               </label>
               <label onClick={(e) => handleCameraClick(e, "photo-left")} className="aspect-[3/4] bg-primary-50 rounded-2xl border-2 border-dashed border-primary-200 flex flex-col items-center justify-center text-primary-400 cursor-pointer overflow-hidden relative group">
-                <input id="photo-left" type="file" accept="image/*" className="hidden" onChange={e => handleFileChange(e, setPhotoLeft)} />
-                {photoLeft ? <img src={photoLeft} alt="Left" className="absolute inset-0 w-full h-full object-cover" /> : (
+                <input id="photo-left" type="file" accept="image/*" className="hidden" onChange={e => handleFileChange(e, setPhotoLeft, setPhotoLeftOrig)} />
+                {photoLeftOrig ? <img src={photoLeftOrig} alt="Left" className="absolute inset-0 w-full h-full object-cover" /> : (
                   <>
                     <Camera size={24} className="group-hover:scale-110 transition-transform" />
                     <span className="text-[10px] font-bold mt-1">Trái</span>
@@ -209,8 +221,8 @@ export default function DiaryScreen({
                 )}
               </label>
               <label onClick={(e) => handleCameraClick(e, "photo-right")} className="aspect-[3/4] bg-primary-50 rounded-2xl border-2 border-dashed border-primary-200 flex flex-col items-center justify-center text-primary-400 cursor-pointer overflow-hidden relative group">
-                <input id="photo-right" type="file" accept="image/*" className="hidden" onChange={e => handleFileChange(e, setPhotoRight)} />
-                {photoRight ? <img src={photoRight} alt="Right" className="absolute inset-0 w-full h-full object-cover" /> : (
+                <input id="photo-right" type="file" accept="image/*" className="hidden" onChange={e => handleFileChange(e, setPhotoRight, setPhotoRightOrig)} />
+                {photoRightOrig ? <img src={photoRightOrig} alt="Right" className="absolute inset-0 w-full h-full object-cover" /> : (
                   <>
                     <Camera size={24} className="group-hover:scale-110 transition-transform" />
                     <span className="text-[10px] font-bold mt-1">Phải</span>
