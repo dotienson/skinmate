@@ -6,6 +6,7 @@ import {
   AlertTriangle,
   ChevronRight,
   ShieldCheck,
+  ArrowLeft,
 } from "lucide-react";
 
 export default function DiaryScreen({
@@ -31,6 +32,28 @@ export default function DiaryScreen({
   const [photoRight, setPhotoRight] = useState<string | null>(null);
 
   const [selectedLog, setSelectedLog] = useState<any | null>(null);
+
+  const [showPhotoReminder, setShowPhotoReminder] = useState(false);
+  const [pendingInputId, setPendingInputId] = useState<string | null>(null);
+  const [dontShowAgain, setDontShowAgain] = useState(false);
+
+  const handleCameraClick = (e: React.MouseEvent<HTMLLabelElement>, inputId: string) => {
+    if (localStorage.getItem("skinmate_hide_photo_reminder") !== "true") {
+      e.preventDefault();
+      setPendingInputId(inputId);
+      setShowPhotoReminder(true);
+    }
+  };
+
+  const confirmPhotoReminder = () => {
+    if (dontShowAgain) {
+      localStorage.setItem("skinmate_hide_photo_reminder", "true");
+    }
+    setShowPhotoReminder(false);
+    if (pendingInputId) {
+      document.getElementById(pendingInputId)?.click();
+    }
+  };
 
   const handleSave = () => {
     const newEntry = {
@@ -125,8 +148,8 @@ export default function DiaryScreen({
               <Camera size={18} className="text-primary-400" /> Hình ảnh hôm nay
             </h3>
             <div className="grid grid-cols-3 gap-2">
-              <label className="aspect-[3/4] bg-primary-50 rounded-2xl border-2 border-dashed border-primary-200 flex flex-col items-center justify-center text-primary-400 cursor-pointer overflow-hidden relative group">
-                <input type="file" accept="image/*" className="hidden" onChange={e => handleFileChange(e, setPhotoFront)} />
+              <label onClick={(e) => handleCameraClick(e, "photo-front")} className="aspect-[3/4] bg-primary-50 rounded-2xl border-2 border-dashed border-primary-200 flex flex-col items-center justify-center text-primary-400 cursor-pointer overflow-hidden relative group">
+                <input id="photo-front" type="file" accept="image/*" className="hidden" onChange={e => handleFileChange(e, setPhotoFront)} />
                 {photoFront ? <img src={photoFront} alt="Front" className="absolute inset-0 w-full h-full object-cover" /> : (
                   <>
                     <Camera size={24} className="group-hover:scale-110 transition-transform" />
@@ -134,8 +157,8 @@ export default function DiaryScreen({
                   </>
                 )}
               </label>
-              <label className="aspect-[3/4] bg-primary-50 rounded-2xl border-2 border-dashed border-primary-200 flex flex-col items-center justify-center text-primary-400 cursor-pointer overflow-hidden relative group">
-                <input type="file" accept="image/*" className="hidden" onChange={e => handleFileChange(e, setPhotoLeft)} />
+              <label onClick={(e) => handleCameraClick(e, "photo-left")} className="aspect-[3/4] bg-primary-50 rounded-2xl border-2 border-dashed border-primary-200 flex flex-col items-center justify-center text-primary-400 cursor-pointer overflow-hidden relative group">
+                <input id="photo-left" type="file" accept="image/*" className="hidden" onChange={e => handleFileChange(e, setPhotoLeft)} />
                 {photoLeft ? <img src={photoLeft} alt="Left" className="absolute inset-0 w-full h-full object-cover" /> : (
                   <>
                     <Camera size={24} className="group-hover:scale-110 transition-transform" />
@@ -143,8 +166,8 @@ export default function DiaryScreen({
                   </>
                 )}
               </label>
-              <label className="aspect-[3/4] bg-primary-50 rounded-2xl border-2 border-dashed border-primary-200 flex flex-col items-center justify-center text-primary-400 cursor-pointer overflow-hidden relative group">
-                <input type="file" accept="image/*" className="hidden" onChange={e => handleFileChange(e, setPhotoRight)} />
+              <label onClick={(e) => handleCameraClick(e, "photo-right")} className="aspect-[3/4] bg-primary-50 rounded-2xl border-2 border-dashed border-primary-200 flex flex-col items-center justify-center text-primary-400 cursor-pointer overflow-hidden relative group">
+                <input id="photo-right" type="file" accept="image/*" className="hidden" onChange={e => handleFileChange(e, setPhotoRight)} />
                 {photoRight ? <img src={photoRight} alt="Right" className="absolute inset-0 w-full h-full object-cover" /> : (
                   <>
                     <Camera size={24} className="group-hover:scale-110 transition-transform" />
@@ -257,58 +280,80 @@ export default function DiaryScreen({
 
       {/* Image View Modal */}
       {selectedLog && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10">
-              <h3 className="font-bold text-gray-800">
-                {new Date(selectedLog.date).toLocaleDateString("vi-VN", {
-                  month: "long",
-                  day: "numeric",
-                  year: "numeric"
-                })}
-              </h3>
-              <button onClick={() => setSelectedLog(null)} className="text-gray-400 hover:text-gray-600 font-bold p-2">✕</button>
+        <div className="fixed inset-0 bg-black z-50 flex flex-col items-center justify-center fade-in">
+          <div className="absolute top-0 left-0 right-0 p-4 md:p-8 flex justify-between items-center z-10 bg-gradient-to-b from-black/60 to-transparent">
+            <button onClick={() => setSelectedLog(null)} className="flex items-center gap-2 text-white font-bold bg-white/20 backdrop-blur-md px-4 py-2 rounded-full hover:bg-white/30 transition-colors">
+              <ArrowLeft size={18} /> Trở lại
+            </button>
+            <span className="text-white font-medium text-sm">
+              {new Date(selectedLog.date).toLocaleDateString("vi-VN", {
+                month: "short",
+                day: "numeric",
+                year: "numeric"
+              })}
+            </span>
+          </div>
+          
+          <div className="overflow-y-auto w-full h-full p-4 pb-20 flex flex-col items-center mt-16 space-y-6">
+            {(!selectedLog.photos?.front && !selectedLog.photos?.left && !selectedLog.photos?.right) ? (
+              <div className="text-center py-20 text-gray-500 flex flex-col items-center justify-center h-full">
+                <Camera size={64} className="mx-auto mb-4 opacity-20 text-white" />
+                <p className="text-sm font-medium">Không có hình ảnh cho ngày này</p>
+              </div>
+            ) : (
+              <div className="space-y-6 w-full max-w-lg">
+                {selectedLog.photos.front && (
+                  <div>
+                    <img src={selectedLog.photos.front} alt="Front" className="w-full rounded-xl object-contain shadow-2xl" />
+                  </div>
+                )}
+                {selectedLog.photos.left && (
+                  <div>
+                    <img src={selectedLog.photos.left} alt="Left" className="w-full rounded-xl object-contain shadow-2xl" />
+                  </div>
+                )}
+                {selectedLog.photos.right && (
+                  <div>
+                    <img src={selectedLog.photos.right} alt="Right" className="w-full rounded-xl object-contain shadow-2xl" />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Photo Reminder Modal */}
+      {showPhotoReminder && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 fade-in">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-xl relative text-center">
+            <div className="mx-auto bg-amber-100 text-amber-500 w-16 h-16 rounded-full flex items-center justify-center mb-4">
+              <Camera size={32} />
+            </div>
+            <h3 className="font-bold text-gray-800 text-lg mb-2">Lưu ý khi chụp ảnh</h3>
+            <p className="text-sm text-gray-600 font-medium mb-6 leading-relaxed">
+              Hãy chụp ở nơi có điều kiện ánh sáng tốt nhất (tối ưu ánh sáng trắng hoặc ánh sáng tự nhiên), không dùng flash, có thể nhờ bạn bè hoặc người thân hỗ trợ nha!
+            </p>
+            
+            <div className="flex items-center gap-2 justify-center mb-6">
+              <input 
+                type="checkbox" 
+                id="dontShowAgain" 
+                checked={dontShowAgain} 
+                onChange={(e) => setDontShowAgain(e.target.checked)}
+                className="rounded border-gray-300 text-primary-500 focus:ring-primary-500 w-4 h-4"
+              />
+              <label htmlFor="dontShowAgain" className="text-xs text-gray-500 font-medium cursor-pointer">
+                Không hiện lại lời nhắc này
+              </label>
             </div>
             
-            <div className="overflow-y-auto p-4 space-y-4">
-              {(!selectedLog.photos?.front && !selectedLog.photos?.left && !selectedLog.photos?.right) ? (
-                <div className="text-center py-8 text-gray-400">
-                  <Camera size={48} className="mx-auto mb-2 opacity-20" />
-                  <p className="text-sm font-medium">Không có hình ảnh cho ngày này</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {selectedLog.photos.front && (
-                    <div>
-                      <p className="text-xs font-bold text-gray-500 mb-1">Trực diện</p>
-                      <img src={selectedLog.photos.front} alt="Front" className="w-full rounded-2xl object-contain bg-gray-50" />
-                    </div>
-                  )}
-                  {selectedLog.photos.left && (
-                    <div>
-                      <p className="text-xs font-bold text-gray-500 mb-1">Trái</p>
-                      <img src={selectedLog.photos.left} alt="Left" className="w-full rounded-2xl object-contain bg-gray-50" />
-                    </div>
-                  )}
-                  {selectedLog.photos.right && (
-                    <div>
-                      <p className="text-xs font-bold text-gray-500 mb-1">Phải</p>
-                      <img src={selectedLog.photos.right} alt="Right" className="w-full rounded-2xl object-contain bg-gray-50" />
-                    </div>
-                  )}
-                </div>
-              )}
-              
-              <div className="bg-gray-50 p-4 rounded-2xl mt-4">
-                <h4 className="font-bold text-sm text-gray-700 mb-2">Chỉ số khó chịu (PROM)</h4>
-                <div className="grid grid-cols-2 gap-2 text-sm font-medium text-gray-600">
-                  <div className="flex justify-between bg-white p-2 rounded-xl"><span>Khô da:</span> <span className="font-bold text-orange-500">{selectedLog.prom.dryness}/10</span></div>
-                  <div className="flex justify-between bg-white p-2 rounded-xl"><span>Châm chích:</span> <span className="font-bold text-red-500">{selectedLog.prom.stinging}/10</span></div>
-                  <div className="flex justify-between bg-white p-2 rounded-xl"><span>Đỏ da:</span> <span className="font-bold text-rose-500">{selectedLog.prom.redness}/10</span></div>
-                  <div className="flex justify-between bg-white p-2 rounded-xl"><span>Mụn:</span> <span className="font-bold text-amber-500">{selectedLog.prom.acne}/10</span></div>
-                </div>
-              </div>
-            </div>
+            <button 
+              onClick={confirmPhotoReminder}
+              className="w-full bg-primary-500 text-white font-bold py-3.5 rounded-xl hover:bg-primary-600 transition-colors"
+            >
+              Đã hiểu
+            </button>
           </div>
         </div>
       )}
