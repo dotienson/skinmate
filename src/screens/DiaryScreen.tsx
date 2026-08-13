@@ -11,20 +11,24 @@ import {
   Share2
 } from "lucide-react";
 
-const downloadImage = (dataUrl: string, title: string) => {
+const downloadImage = (dataUrl: string, title: string, dateStr?: string) => {
   const link = document.createElement('a');
   link.href = dataUrl;
-  link.download = `SkinMate_${title}_${Date.now()}.jpg`;
+  const dateSuffix = dateStr ? `_${dateStr}` : `_${new Date().toLocaleDateString('vi-VN').replace(/\//g, '-')}`;
+  link.download = `SkinMate_${title}${dateSuffix}.jpg`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
 };
 
-const shareImage = async (dataUrl: string, title: string) => {
+const shareImage = async (dataUrl: string, title: string, dateStr?: string) => {
+  const dateSuffix = dateStr ? `_${dateStr}` : `_${new Date().toLocaleDateString('vi-VN').replace(/\//g, '-')}`;
+  const fileName = `SkinMate_${title}${dateSuffix}.jpg`;
+  
   try {
     const response = await fetch(dataUrl);
     const blob = await response.blob();
-    const file = new File([blob], `SkinMate_${title}.jpg`, { type: 'image/jpeg' });
+    const file = new File([blob], fileName, { type: 'image/jpeg' });
     
     if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
       await navigator.share({
@@ -33,11 +37,11 @@ const shareImage = async (dataUrl: string, title: string) => {
       });
     } else {
       // Fallback
-      downloadImage(dataUrl, title);
+      downloadImage(dataUrl, title, dateStr);
     }
   } catch (e) {
     console.error("Error sharing", e);
-    downloadImage(dataUrl, title); // fallback
+    downloadImage(dataUrl, title, dateStr); // fallback
   }
 };
 
@@ -89,9 +93,10 @@ export default function DiaryScreen({
 
   const handleSave = () => {
     // Tự động tải ảnh về máy khi lưu log (có delay ngắn để trình duyệt không chặn popup)
-    if (photoFront) setTimeout(() => downloadImage(photoFront, 'TrucDien'), 100);
-    if (photoLeft) setTimeout(() => downloadImage(photoLeft, 'Trai'), 400);
-    if (photoRight) setTimeout(() => downloadImage(photoRight, 'Phai'), 700);
+    const dateStr = new Date().toLocaleDateString('vi-VN').replace(/\//g, '-');
+    if (photoFront) setTimeout(() => downloadImage(photoFront, 'TrucDien', dateStr), 100);
+    if (photoLeft) setTimeout(() => downloadImage(photoLeft, 'Trai', dateStr), 400);
+    if (photoRight) setTimeout(() => downloadImage(photoRight, 'Phai', dateStr), 700);
 
     const newEntry = {
       date: new Date().toISOString(),
@@ -118,8 +123,8 @@ export default function DiaryScreen({
         const img = new Image();
         img.onload = () => {
           const canvas = document.createElement("canvas");
-          const MAX_WIDTH = 400;
-          const MAX_HEIGHT = 400;
+          const MAX_WIDTH = 2048;
+          const MAX_HEIGHT = 2048;
           let width = img.width;
           let height = img.height;
 
@@ -139,8 +144,8 @@ export default function DiaryScreen({
           const ctx = canvas.getContext("2d");
           ctx?.drawImage(img, 0, 0, width, height);
           
-          // Compress carefully to fit localstorage
-          const dataUrl = canvas.toDataURL("image/jpeg", 0.6);
+          // Use high quality JPEG (0.95) for original resolution look while preventing localStorage quota overflow
+          const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
           setter(dataUrl);
         };
         img.src = reader.result as string;
@@ -343,8 +348,8 @@ export default function DiaryScreen({
                   <div>
                     <img src={selectedLog.photos.front} alt="Front" className="w-full rounded-xl object-contain shadow-2xl mb-3" />
                     <div className="flex justify-end gap-2">
-                       <button onClick={() => shareImage(selectedLog.photos.front, 'TrucDien')} className="bg-white/20 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 hover:bg-white/30 backdrop-blur-md"><Share2 size={14}/> Chia sẻ</button>
-                       <button onClick={() => downloadImage(selectedLog.photos.front, 'TrucDien')} className="bg-white/20 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 hover:bg-white/30 backdrop-blur-md"><Download size={14}/> Lưu</button>
+                       <button onClick={() => shareImage(selectedLog.photos.front, 'TrucDien', new Date(selectedLog.date).toLocaleDateString('vi-VN').replace(/\//g, '-'))} className="bg-white/20 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 hover:bg-white/30 backdrop-blur-md"><Share2 size={14}/> Chia sẻ</button>
+                       <button onClick={() => downloadImage(selectedLog.photos.front, 'TrucDien', new Date(selectedLog.date).toLocaleDateString('vi-VN').replace(/\//g, '-'))} className="bg-white/20 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 hover:bg-white/30 backdrop-blur-md"><Download size={14}/> Lưu</button>
                     </div>
                   </div>
                 )}
@@ -352,8 +357,8 @@ export default function DiaryScreen({
                   <div>
                     <img src={selectedLog.photos.left} alt="Left" className="w-full rounded-xl object-contain shadow-2xl mb-3" />
                     <div className="flex justify-end gap-2">
-                       <button onClick={() => shareImage(selectedLog.photos.left, 'Trai')} className="bg-white/20 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 hover:bg-white/30 backdrop-blur-md"><Share2 size={14}/> Chia sẻ</button>
-                       <button onClick={() => downloadImage(selectedLog.photos.left, 'Trai')} className="bg-white/20 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 hover:bg-white/30 backdrop-blur-md"><Download size={14}/> Lưu</button>
+                       <button onClick={() => shareImage(selectedLog.photos.left, 'Trai', new Date(selectedLog.date).toLocaleDateString('vi-VN').replace(/\//g, '-'))} className="bg-white/20 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 hover:bg-white/30 backdrop-blur-md"><Share2 size={14}/> Chia sẻ</button>
+                       <button onClick={() => downloadImage(selectedLog.photos.left, 'Trai', new Date(selectedLog.date).toLocaleDateString('vi-VN').replace(/\//g, '-'))} className="bg-white/20 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 hover:bg-white/30 backdrop-blur-md"><Download size={14}/> Lưu</button>
                     </div>
                   </div>
                 )}
@@ -361,8 +366,8 @@ export default function DiaryScreen({
                   <div>
                     <img src={selectedLog.photos.right} alt="Right" className="w-full rounded-xl object-contain shadow-2xl mb-3" />
                     <div className="flex justify-end gap-2">
-                       <button onClick={() => shareImage(selectedLog.photos.right, 'Phai')} className="bg-white/20 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 hover:bg-white/30 backdrop-blur-md"><Share2 size={14}/> Chia sẻ</button>
-                       <button onClick={() => downloadImage(selectedLog.photos.right, 'Phai')} className="bg-white/20 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 hover:bg-white/30 backdrop-blur-md"><Download size={14}/> Lưu</button>
+                       <button onClick={() => shareImage(selectedLog.photos.right, 'Phai', new Date(selectedLog.date).toLocaleDateString('vi-VN').replace(/\//g, '-'))} className="bg-white/20 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 hover:bg-white/30 backdrop-blur-md"><Share2 size={14}/> Chia sẻ</button>
+                       <button onClick={() => downloadImage(selectedLog.photos.right, 'Phai', new Date(selectedLog.date).toLocaleDateString('vi-VN').replace(/\//g, '-'))} className="bg-white/20 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 hover:bg-white/30 backdrop-blur-md"><Download size={14}/> Lưu</button>
                     </div>
                   </div>
                 )}
