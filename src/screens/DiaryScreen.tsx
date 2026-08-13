@@ -7,7 +7,39 @@ import {
   ChevronRight,
   ShieldCheck,
   ArrowLeft,
+  Download,
+  Share2
 } from "lucide-react";
+
+const downloadImage = (dataUrl: string, title: string) => {
+  const link = document.createElement('a');
+  link.href = dataUrl;
+  link.download = `SkinMate_${title}_${Date.now()}.jpg`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+const shareImage = async (dataUrl: string, title: string) => {
+  try {
+    const response = await fetch(dataUrl);
+    const blob = await response.blob();
+    const file = new File([blob], `SkinMate_${title}.jpg`, { type: 'image/jpeg' });
+    
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        title: `SkinMate - ${title}`,
+        files: [file]
+      });
+    } else {
+      // Fallback
+      downloadImage(dataUrl, title);
+    }
+  } catch (e) {
+    console.error("Error sharing", e);
+    downloadImage(dataUrl, title); // fallback
+  }
+};
 
 export default function DiaryScreen({
   userData,
@@ -56,6 +88,11 @@ export default function DiaryScreen({
   };
 
   const handleSave = () => {
+    // Tự động tải ảnh về máy khi lưu log (có delay ngắn để trình duyệt không chặn popup)
+    if (photoFront) setTimeout(() => downloadImage(photoFront, 'TrucDien'), 100);
+    if (photoLeft) setTimeout(() => downloadImage(photoLeft, 'Trai'), 400);
+    if (photoRight) setTimeout(() => downloadImage(photoRight, 'Phai'), 700);
+
     const newEntry = {
       date: new Date().toISOString(),
       prom: { ...prom },
@@ -304,17 +341,29 @@ export default function DiaryScreen({
               <div className="space-y-6 w-full max-w-lg">
                 {selectedLog.photos.front && (
                   <div>
-                    <img src={selectedLog.photos.front} alt="Front" className="w-full rounded-xl object-contain shadow-2xl" />
+                    <img src={selectedLog.photos.front} alt="Front" className="w-full rounded-xl object-contain shadow-2xl mb-3" />
+                    <div className="flex justify-end gap-2">
+                       <button onClick={() => shareImage(selectedLog.photos.front, 'TrucDien')} className="bg-white/20 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 hover:bg-white/30 backdrop-blur-md"><Share2 size={14}/> Chia sẻ</button>
+                       <button onClick={() => downloadImage(selectedLog.photos.front, 'TrucDien')} className="bg-white/20 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 hover:bg-white/30 backdrop-blur-md"><Download size={14}/> Lưu</button>
+                    </div>
                   </div>
                 )}
                 {selectedLog.photos.left && (
                   <div>
-                    <img src={selectedLog.photos.left} alt="Left" className="w-full rounded-xl object-contain shadow-2xl" />
+                    <img src={selectedLog.photos.left} alt="Left" className="w-full rounded-xl object-contain shadow-2xl mb-3" />
+                    <div className="flex justify-end gap-2">
+                       <button onClick={() => shareImage(selectedLog.photos.left, 'Trai')} className="bg-white/20 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 hover:bg-white/30 backdrop-blur-md"><Share2 size={14}/> Chia sẻ</button>
+                       <button onClick={() => downloadImage(selectedLog.photos.left, 'Trai')} className="bg-white/20 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 hover:bg-white/30 backdrop-blur-md"><Download size={14}/> Lưu</button>
+                    </div>
                   </div>
                 )}
                 {selectedLog.photos.right && (
                   <div>
-                    <img src={selectedLog.photos.right} alt="Right" className="w-full rounded-xl object-contain shadow-2xl" />
+                    <img src={selectedLog.photos.right} alt="Right" className="w-full rounded-xl object-contain shadow-2xl mb-3" />
+                    <div className="flex justify-end gap-2">
+                       <button onClick={() => shareImage(selectedLog.photos.right, 'Phai')} className="bg-white/20 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 hover:bg-white/30 backdrop-blur-md"><Share2 size={14}/> Chia sẻ</button>
+                       <button onClick={() => downloadImage(selectedLog.photos.right, 'Phai')} className="bg-white/20 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 hover:bg-white/30 backdrop-blur-md"><Download size={14}/> Lưu</button>
+                    </div>
                   </div>
                 )}
               </div>
