@@ -14,6 +14,13 @@ export type UserData = {
   } | null;
   routines: any[];
   photos: any[];
+  calendarEvents: {
+    id: string;
+    date: string; // YYYY-MM-DD
+    title: string;
+    type: 'checkup' | 'treatment' | 'note';
+    notes: string;
+  }[];
 };
 
 export const defaultUserData: UserData = {
@@ -25,4 +32,5 @@ export const defaultUserData: UserData = {
   quizScores: null,
   routines: [],
   photos: [],
+  calendarEvents: [],
 };

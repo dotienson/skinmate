@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { useState, useEffect } from "react";
-import { Home, ClipboardList, Stethoscope, BookImage, User, BookOpen } from "lucide-react";
+import { Home, ClipboardList, Stethoscope, BookImage, User, BookOpen, CalendarDays, Newspaper } from "lucide-react";
 import { UserData, defaultUserData } from "./types";
 import DashboardScreen from "./screens/DashboardScreen";
 import QuizScreen from "./screens/QuizScreen";
@@ -11,10 +11,12 @@ import AuditorScreen from "./screens/AuditorScreen";
 import DiaryScreen from "./screens/DiaryScreen";
 import ProfileScreen from "./screens/ProfileScreen";
 import ReferenceScreen from "./screens/ReferenceScreen";
+import SkinCalendarScreen from "./screens/SkinCalendarScreen";
+import GoodNewsScreen from "./screens/GoodNewsScreen";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<
-    "home" | "quiz" | "auditor" | "diary" | "profile" | "reference"
+    "home" | "goodnews" | "quiz" | "auditor" | "diary" | "profile" | "reference" | "calendar"
   >("home");
   const [userData, setUserData] = useState<UserData>(() => {
     const saved = localStorage.getItem("skinmate_userdata");
@@ -37,9 +39,11 @@ export default function App() {
 
   const tabs = [
     { id: "home", label: "Home", icon: Home },
+    { id: "goodnews", label: "Good News", icon: Newspaper },
     { id: "quiz", label: "SkinCheck", icon: ClipboardList },
     { id: "auditor", label: "MateCheck", icon: Stethoscope },
     { id: "diary", label: "SkinLog", icon: BookImage },
+    { id: "calendar", label: "SkinCalendar", icon: CalendarDays },
     { id: "profile", label: "Profile", icon: User },
   ] as const;
 
@@ -74,8 +78,8 @@ export default function App() {
   if (!userData.name) {
     return (
       <div className="flex flex-col h-screen bg-[#fffafb] items-center justify-center p-4">
-        <h1 className="text-3xl font-extrabold text-primary-600 tracking-tight mb-2">
-          DermaButter SkinMate
+        <h1 className="text-3xl font-extrabold text-primary-600 tracking-tight mb-2 text-center">
+          9 p.m. Skinmate
         </h1>
         <p className="text-gray-500 mb-8 text-center font-medium">Bắt đầu hành trình hiểu làn da của bạn.</p>
         <div className="w-full max-w-sm bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
@@ -105,14 +109,14 @@ export default function App() {
       {/* Mobile Header */}
       <header className="md:hidden flex-none bg-white p-4 shadow-sm z-10 sticky top-0">
         <h1 className="text-xl font-extrabold text-primary-600 text-center tracking-tight">
-          DermaButter SkinMate
+          9 p.m. Skinmate
         </h1>
       </header>
 
       {/* Desktop Navigation */}
       <nav className="hidden md:flex flex-col w-64 bg-white border-r border-primary-100 z-10 p-6 flex-none">
         <h1 className="text-2xl font-extrabold text-primary-600 tracking-tight mb-8">
-          DermaButter SkinMate
+          9 p.m. Skinmate
         </h1>
         <div className="flex flex-col gap-2">
           {tabs.map((tab) => {
@@ -142,23 +146,35 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto w-full relative bg-gray-50/50">
-        <div className="absolute inset-0 p-4 md:p-8 max-w-3xl mx-auto">
-          {activeTab === "home" && (
-            <DashboardScreen userData={userData} setActiveTab={setActiveTab} />
-          )}
-          {activeTab === "quiz" && (
-            <QuizScreen
-              userData={userData}
-              setUserData={setUserData}
-              setActiveTab={setActiveTab}
-            />
-          )}
-          {activeTab === "auditor" && <AuditorScreen userData={userData} />}
-          {activeTab === "diary" && (
-            <DiaryScreen userData={userData} setUserData={setUserData} />
-          )}
-          {activeTab === "profile" && <ProfileScreen userData={userData} setActiveTab={setActiveTab} />}
-          {activeTab === "reference" && <ReferenceScreen setActiveTab={setActiveTab} />}
+        <div className="min-h-full p-4 md:p-8 max-w-3xl mx-auto flex flex-col">
+          <div className="flex-1">
+            {activeTab === "home" && (
+              <DashboardScreen userData={userData} setActiveTab={setActiveTab} />
+            )}
+            {activeTab === "goodnews" && <GoodNewsScreen />}
+            {activeTab === "quiz" && (
+              <QuizScreen
+                userData={userData}
+                setUserData={setUserData}
+                setActiveTab={setActiveTab}
+              />
+            )}
+            {activeTab === "auditor" && <AuditorScreen userData={userData} />}
+            {activeTab === "diary" && (
+              <DiaryScreen userData={userData} setUserData={setUserData} />
+            )}
+            {activeTab === "calendar" && (
+              <SkinCalendarScreen userData={userData} setUserData={setUserData} />
+            )}
+            {activeTab === "profile" && <ProfileScreen userData={userData} setActiveTab={setActiveTab} />}
+            {activeTab === "reference" && <ReferenceScreen setActiveTab={setActiveTab} />}
+          </div>
+          
+          {/* Global Footer */}
+          <footer className="mt-12 py-6 text-center border-t border-gray-200 text-xs text-gray-500">
+            <p className="font-bold text-gray-600 mb-1">Sổ trị liệu dành cho khách hàng của 9 p.m. SkinCare</p>
+            <p>Hotline: 0374 558 669 &nbsp;-&nbsp; Địa chỉ: số 46, ngõ 196, Nguyễn Sơn, Bồ Đề</p>
+          </footer>
         </div>
       </main>
 

@@ -16,11 +16,24 @@ export default function DashboardScreen({
 }) {
   const hasQuiz = userData.quizScores !== null;
 
+  const todayStr = new Date().toDateString();
+  const hasLoggedToday = userData.photos?.some(p => new Date(p.date).toDateString() === todayStr);
+
   return (
     <div className="space-y-6 pb-20 fade-in">
+      {!hasLoggedToday && hasQuiz && (
+        <div className="bg-orange-50 border-2 border-orange-200 rounded-3xl p-5 shadow-sm flex items-center justify-between gap-4 animate-pulse">
+           <div>
+             <h4 className="font-bold text-orange-800 text-sm mb-1 flex items-center gap-1"><AlertTriangle size={16} /> Nhắc nhở SkinLog</h4>
+             <p className="text-xs text-orange-600 font-medium">Bạn chưa ghi nhận tình trạng da hôm nay.</p>
+           </div>
+           <button onClick={() => setActiveTab('diary')} className="bg-orange-500 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-orange-600">Ghi ngay</button>
+        </div>
+      )}
+
       <div className="bg-gradient-to-r from-primary-400 to-primary-600 rounded-3xl p-6 text-white shadow-lg relative overflow-hidden">
         <div className="relative z-10">
-          <h2 className="text-2xl font-black mb-2">DermaButter SkinMate xin chào {userData.name}!</h2>
+          <h2 className="text-2xl font-black mb-2">9 p.m. Skinmate xin chào {userData.name}!</h2>
           <p className="text-primary-50 text-sm font-medium mb-4">
             {hasQuiz
               ? "Cùng xem tình trạng da của bạn hôm nay nhé."
