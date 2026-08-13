@@ -30,6 +30,8 @@ export default function DiaryScreen({
   const [photoLeft, setPhotoLeft] = useState<string | null>(null);
   const [photoRight, setPhotoRight] = useState<string | null>(null);
 
+  const [selectedLog, setSelectedLog] = useState<any | null>(null);
+
   const handleSave = () => {
     const newEntry = {
       date: new Date().toISOString(),
@@ -220,9 +222,10 @@ export default function DiaryScreen({
             </div>
           ) : (
             userData.photos.map((p, i) => (
-              <div
+              <button
                 key={i}
-                className="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4"
+                onClick={() => setSelectedLog(p)}
+                className="w-full text-left bg-white p-4 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4 hover:bg-gray-50 transition-colors"
               >
                 <div className="w-16 h-16 bg-primary-50 rounded-2xl flex items-center justify-center text-primary-300 overflow-hidden shrink-0">
                   {p.photos?.front || p.photos?.left || p.photos?.right ? (
@@ -246,9 +249,67 @@ export default function DiaryScreen({
                   </div>
                 </div>
                 <ChevronRight className="text-gray-300" />
-              </div>
+              </button>
             ))
           )}
+        </div>
+      )}
+
+      {/* Image View Modal */}
+      {selectedLog && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10">
+              <h3 className="font-bold text-gray-800">
+                {new Date(selectedLog.date).toLocaleDateString("vi-VN", {
+                  month: "long",
+                  day: "numeric",
+                  year: "numeric"
+                })}
+              </h3>
+              <button onClick={() => setSelectedLog(null)} className="text-gray-400 hover:text-gray-600 font-bold p-2">✕</button>
+            </div>
+            
+            <div className="overflow-y-auto p-4 space-y-4">
+              {(!selectedLog.photos?.front && !selectedLog.photos?.left && !selectedLog.photos?.right) ? (
+                <div className="text-center py-8 text-gray-400">
+                  <Camera size={48} className="mx-auto mb-2 opacity-20" />
+                  <p className="text-sm font-medium">Không có hình ảnh cho ngày này</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {selectedLog.photos.front && (
+                    <div>
+                      <p className="text-xs font-bold text-gray-500 mb-1">Trực diện</p>
+                      <img src={selectedLog.photos.front} alt="Front" className="w-full rounded-2xl object-contain bg-gray-50" />
+                    </div>
+                  )}
+                  {selectedLog.photos.left && (
+                    <div>
+                      <p className="text-xs font-bold text-gray-500 mb-1">Trái</p>
+                      <img src={selectedLog.photos.left} alt="Left" className="w-full rounded-2xl object-contain bg-gray-50" />
+                    </div>
+                  )}
+                  {selectedLog.photos.right && (
+                    <div>
+                      <p className="text-xs font-bold text-gray-500 mb-1">Phải</p>
+                      <img src={selectedLog.photos.right} alt="Right" className="w-full rounded-2xl object-contain bg-gray-50" />
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              <div className="bg-gray-50 p-4 rounded-2xl mt-4">
+                <h4 className="font-bold text-sm text-gray-700 mb-2">Chỉ số khó chịu (PROM)</h4>
+                <div className="grid grid-cols-2 gap-2 text-sm font-medium text-gray-600">
+                  <div className="flex justify-between bg-white p-2 rounded-xl"><span>Khô da:</span> <span className="font-bold text-orange-500">{selectedLog.prom.dryness}/10</span></div>
+                  <div className="flex justify-between bg-white p-2 rounded-xl"><span>Châm chích:</span> <span className="font-bold text-red-500">{selectedLog.prom.stinging}/10</span></div>
+                  <div className="flex justify-between bg-white p-2 rounded-xl"><span>Đỏ da:</span> <span className="font-bold text-rose-500">{selectedLog.prom.redness}/10</span></div>
+                  <div className="flex justify-between bg-white p-2 rounded-xl"><span>Mụn:</span> <span className="font-bold text-amber-500">{selectedLog.prom.acne}/10</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
